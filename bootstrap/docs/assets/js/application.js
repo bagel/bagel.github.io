@@ -6,22 +6,10 @@
 
   $(function(){
 
-    var $window = $(window)
-
     // Disable certain links in docs
     $('section [href^=#]').click(function (e) {
       e.preventDefault()
     })
-
-    // side bar
-    setTimeout(function () {
-      $('.bs-docs-sidenav').affix({
-        offset: {
-          top: function () { return $window.width() <= 980 ? 290 : 210 }
-        , bottom: 270
-        }
-      })
-    }, 100)
 
     // make code pretty
     window.prettyPrint && prettyPrint()
@@ -33,24 +21,59 @@
       $(this).parents('.add-on')[method]('active')
     })
 
+    // position static twipsies for components page
+    if ($(".twipsies a").length) {
+      $(window).on('load resize', function () {
+        $(".twipsies a").each(function () {
+          $(this)
+            .tooltip({
+              placement: $(this).attr('title')
+            , trigger: 'manual'
+            })
+            .tooltip('show')
+          })
+      })
+    }
+
     // add tipsies to grid for scaffolding
-    if ($('#gridSystem').length) {
-      $('#gridSystem').tooltip({
-          selector: '.show-grid > [class*="span"]'
+    if ($('#grid-system').length) {
+      $('#grid-system').tooltip({
+          selector: '.show-grid > div'
         , title: function () { return $(this).width() + 'px' }
       })
     }
 
+    // fix sub nav on scroll
+    var $win = $(window)
+      , $nav = $('.subnav')
+      , navTop = $('.subnav').length && $('.subnav').offset().top - 40
+      , isFixed = 0
+
+    processScroll()
+
+    $win.on('scroll', processScroll)
+
+    function processScroll() {
+      var i, scrollTop = $win.scrollTop()
+      if (scrollTop >= navTop && !isFixed) {
+        isFixed = 1
+        $nav.addClass('subnav-fixed')
+      } else if (scrollTop <= navTop && isFixed) {
+        isFixed = 0
+        $nav.removeClass('subnav-fixed')
+      }
+    }
+
     // tooltip demo
-    $('.tooltip-demo').tooltip({
-      selector: "a[data-toggle=tooltip]"
+    $('.tooltip-demo.well').tooltip({
+      selector: "a[rel=tooltip]"
     })
 
     $('.tooltip-test').tooltip()
     $('.popover-test').popover()
 
     // popover demo
-    $("a[data-toggle=popover]")
+    $("a[rel=popover]")
       .popover()
       .click(function(e) {
         e.preventDefault()
@@ -91,7 +114,7 @@
     })
 
     // request built javascript
-    $('.download-btn .btn').on('click', function () {
+    $('.download-btn').on('click', function () {
 
       var css = $("#components.download input:checked")
             .map(function () { return this.value })
@@ -109,7 +132,7 @@
 
       $.ajax({
         type: 'POST'
-      , url: /\?dev/.test(window.location) ? 'http://localhost:3000' : 'http://bootstrap.herokuapp.com'
+      , url: 'http://bootstrap.herokuapp.com'
       , dataType: 'jsonpi'
       , params: {
           js: js
@@ -119,6 +142,7 @@
       }
       })
     })
+
   })
 
 // Modified from the original jsonpi https://github.com/benvinegar/jquery-jsonpi
